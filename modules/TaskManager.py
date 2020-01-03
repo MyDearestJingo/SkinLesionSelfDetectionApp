@@ -15,6 +15,10 @@ MAX_RETRANS = 5
 
 STAT_PROCESSING = 1
 STAT_RECV_COMPLETE = 2
+STAT_KEYBORDINTERRUPT = -3
+STAT_TIMEOUT = -2
+STAT_FAILURE = -1
+STAT_NOEEROR = 0
 
 class TaskManager:
     def __init__(self, host, port, work_dir):
@@ -102,7 +106,7 @@ class TaskManager:
         n_timeout = 0
         while not is_success:
             if n_timeout > MAX_RETRANS:
-                break
+                return STAT_TIMEOUT
             try:
                 size = int.from_bytes(self.t_socket.recv(4),byteorder="little")
                 task_pack = bytes()
@@ -114,7 +118,7 @@ class TaskManager:
                     recv_size += len(recv_buff)
                     task_pack += recv_buff
                     print("size: {}B | recv: {}B".format(size, recv_size),end='\r')
-                print('\nChecking...')
+                print('\nChecking...',end='\r')
                 cs = self.get_checksum(task_pack).to_bytes(1,"little")
 
                 # 异常测试
@@ -124,11 +128,11 @@ class TaskManager:
                 if cs != self.t_socket.recv(1):
                     print("Data Error, need to retransfer")
                 else:
-                    print("Transfer Complete")
+                    print("Checking Success. Transfer Complete")
                     self.close()
                     is_success = True
             except socket.timeout:
-                print("Timeout")
+                print("Timeout, retry in {} time(s)".format(MAX_RETRANS-n_timeout))
                 n_timeout += 1
         
         task_pack = json.loads(task_pack)
@@ -148,7 +152,16 @@ class TaskManager:
                 img_file.write(b_img)
                 img_file.close()
         
-        return True
+        # client_id = task_pack["id"]
+        file_list = []
+        for file_name in task_pack["name_imgs"]:
+            file_list.append([file_name, -1])
+        with open(task_dir+"/"+"csv.csv","w") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerows(file_list)
+        self.task_list.append(task_pack["id"])
+        
+        return STAT_NOEEROR
         
 
 
@@ -168,13 +181,13 @@ class TaskManager:
 
 
 if __name__ == "__main__":
-    work_dir = "F:/MyDearest/Project/Skin_Lesion_Detection/ResNet/project_src"
-    tm = TaskManager("198.13.44.143",9999, work_dir)
+    work_dir = "F:/MyDearest/Project/SkinLesionSelfDetectionApp/dev/test"
+    tm = TaskManager("192.168.109.131",9999, work_dir)
+    stat_flag = -1
     while True:
         try:
             # tm.recv_task()
-            is_complete = False
-            is_complete = tm.recv_task_with_json()
+            stat_flag = tm.recv_task_with_json()
         except KeyboardInterrupt:
             tm.close()
             break
@@ -182,7 +195,7 @@ if __name__ == "__main__":
             pass
 
         finally:
-            if is_complete:
+            if not stat_flag:
                 break
 
     
