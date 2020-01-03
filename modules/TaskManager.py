@@ -100,7 +100,7 @@ class TaskManager:
             writer.writerows(img_list)
         self.task_list.append(client_id)
     
-    def recv_task_with_json(self):
+    def recv_task_with_json(self, max_seg_recv):
         self.connect()
         is_success = False
         n_timeout = 0
@@ -112,8 +112,9 @@ class TaskManager:
                 task_pack = bytes()
                 recv_size = 0
                 recv_buff = bytes()
+                _MAX_SEG_RECV = size if max_seg_recv <= 0 else max_seg_recv
                 while recv_size < size:
-                    next_size = MAX_RECV if size-recv_size > MAX_RECV else size-recv_size
+                    next_size = _MAX_SEG_RECV if size-recv_size > _MAX_SEG_RECV else size-recv_size
                     recv_buff = self.t_socket.recv(next_size)
                     recv_size += len(recv_buff)
                     task_pack += recv_buff
@@ -176,18 +177,18 @@ class TaskManager:
 
     ''' def 接收预测结果并从socket回传 '''
 
-
-
-
+aliyun = "120.26.147.239"
+virtual = "192.168.109.131"
+vps_jp = "198.13.44.143"
 
 if __name__ == "__main__":
     work_dir = "F:/MyDearest/Project/SkinLesionSelfDetectionApp/dev/test"
-    tm = TaskManager("192.168.109.131",9999, work_dir)
+    tm = TaskManager(vps_jp,9999, work_dir)
     stat_flag = -1
     while True:
         try:
             # tm.recv_task()
-            stat_flag = tm.recv_task_with_json()
+            stat_flag = tm.recv_task_with_json(max_seg_recv=0)
         except KeyboardInterrupt:
             tm.close()
             break

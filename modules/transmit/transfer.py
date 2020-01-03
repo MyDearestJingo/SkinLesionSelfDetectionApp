@@ -26,15 +26,21 @@ STAT_TIMEOUT = -2
 STAT_FAILURE = -1
 STAT_NOEEROR = 0
 trans_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host = "192.168.109.131"
+
+aliyun = "120.26.147.239"
+aliyun_inside = "172.16.71.30"
+virtual = "192.168.109.131"
+vps_jp = "198.13.44.143"
+
+host = vps_jp
 port = 9999
 
 trans_socket.bind((host, port))
 trans_socket.listen(5)
 
 
-# img_filenames = ["ISIC_0012086.jpg", "ISIC_0012092.jpg", "ISIC_0012095.jpg"]
-img_filenames = ["pixiv57735171_12.jpg", "pixiv57735171_11.jpg", "pixiv57735171_6.jpg"]
+img_filenames = ["ISIC_0012086.jpg", "ISIC_0012092.jpg", "ISIC_0012095.jpg"]
+# img_filenames = ["pixiv57735171_12.jpg", "pixiv57735171_11.jpg", "pixiv57735171_6.jpg"]
 
 def send_data(send_socket, bstream, max_seg_size, timeout, max_retry):
 
@@ -48,12 +54,12 @@ def send_data(send_socket, bstream, max_seg_size, timeout, max_retry):
     data_size = len(bstream)
     
     n_retry = 0
-    next_size = max_seg_size
+    max_seg_size = data_size if max_seg_size <= 0 else max_seg_size
     while sent_size < data_size:
         next_size = max_seg_size if data_size-sent_size>max_seg_size else data_size-sent_size 
         try:
-            send_socket.sendall(bstream[sent_size:sent_size+next_size])
-            sent_size += next_size
+            sent_size += send_socket.send(bstream[sent_size:sent_size+next_size])
+            # sent_size += next_size
             print("Total Size: {}B | Sent: {}B".format(data_size, sent_size), end='\r')
         except socket.timeout:
             n_retry += 1
@@ -72,10 +78,7 @@ def send_data(send_socket, bstream, max_seg_size, timeout, max_retry):
     send_socket.settimeout(pre_timeout)
     stat_flag = STAT_NOEEROR
     # print('\n')
-    if stat_flag == STAT_NOEEROR:
-        return sent_size
-    else:
-        return stat_flag
+    return (stat_flag, sent_size)
 
 def send_task():
     try:
@@ -154,9 +157,11 @@ def send_task_with_json():
             task_socket.sendall(size+bstream+cs)
             task_socket.send(cs)
             '''
-            sent_size = send_data(task_socket, bstream, MAX_SEG_SIZE, MAX_TIMEOUT, MAX_RETRANS)
+            stat_flag, sent_size = send_data(task_socket, bstream, 0, MAX_TIMEOUT, MAX_RETRANS)
             print("Sent: {}B, wait for checking...".format(sent_size),end='\r')
-            
+            if stat_flag == STAT_KEYBORDINTERRUPT:
+                raise KeyboardInterrupt
+                break
             if cs  == task_socket.recv(1):
                 is_success = True
                 print("Transmition of {} is successful".format(client_id))
@@ -190,3 +195,6 @@ if __name__ == "__main__":
         # break
     except ConnectionResetError:
         pass
+    finally:
+        task_socket.close()
+        trans_socket.close()
