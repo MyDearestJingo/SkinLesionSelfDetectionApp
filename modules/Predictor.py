@@ -37,7 +37,7 @@ class Predictor:
     def load_data(self, work_dir, client_id="TEST"):
         self.client_id = client_id
         self.work_dir = work_dir
-        dataset = InputData(csv_path=work_dir+"csv.csv", 
+        dataset = InputData(csv_path=work_dir+"/csv.csv", 
                             img_folder=work_dir, 
                             dataset=client_id, 
                             data_transforms=self.data_transform
@@ -72,29 +72,23 @@ class Predictor:
                     prob_tensor[i,j] = decision_l/2 + output_g.data[i, j]/2
 
         preds_value, preds = torch.max(prob_tensor, 1)
-        # preds_sum = torch.sum(prob_tensor,0)
-        # preds_avg = torch.mean(prob_tensor,0)
-        # print("preds_avg:", preds_avg)
         for i in range(self.dataset_size):
-            # prob = float(preds_value[i].item())/preds_sum[i].item()
-            # prob = 1.0/3.0 * (1+preds_value[i].item()-preds_avg[i].item())
-            # result.append([preds_dataset.imgs[i][0], preds[i].item(), prob])
             result.append([self.pic_list[i][0], preds[i].item()])
         self.result = result
     
     def output_result(self):
         if self.client_id is not None and self.result is not None:
-            with open(self.work_dir+"result.csv","w") as csv_file:
+            with open(self.work_dir+'/'+"result.csv","w", newline="") as csv_file:
                 writer = csv.writer(csv_file)
                 writer.writerows(self.result)
-                return True
-        return False
+                return self.result
+        return None
 
 if __name__ == "__main__":
     local_model_path = 'F:/MyDearest/Project/Skin_Lesion_Detection/isic_resnet_l_3c.pkl'
     global_model_path = 'F:/MyDearest/Project/Skin_Lesion_Detection/isic_resnet_g.pkl'
     predictor = Predictor(global_model_path ,local_model_path)
-    predictor.load_data(work_dir="../project_data/TEST/")
+    predictor.load_data(work_dir="../project_data/TEST")
     predictor.predict()
     predictor.output_result()
     pass
