@@ -20,7 +20,7 @@ class InputData(Dataset):
         # .csv 文件保存当前预测任务的所有图片的路径，并在预测后保存每张图片的预测结果概率
         csv_reader = csv.reader(open(csv_path,"r"))
         for item in csv_reader:
-            imgs.append([img_folder + "\\" + item[0] + ".jpg", 0.0, 0.0, 0.0]) # 图片确切路径，属于类1的概率，属于类2的概率，属于类3的概率
+            imgs.append([img_folder + "/" + item[0], 0.0, 0.0, 0.0]) # 图片确切路径，属于类1的概率，属于类2的概率，属于类3的概率
             self.pic_list.append(item)
         self.imgs = imgs
 
