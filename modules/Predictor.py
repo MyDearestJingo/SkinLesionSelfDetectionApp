@@ -75,6 +75,7 @@ class Predictor:
         for i in range(self.dataset_size):
             result.append([self.pic_list[i][0], preds[i].item()])
         self.result = result
+        return result
     
     def output_result(self):
         if self.client_id is not None and self.result is not None:
@@ -85,8 +86,8 @@ class Predictor:
         return None
 
 if __name__ == "__main__":
-    local_model_path = 'F:/MyDearest/Project/Skin_Lesion_Detection/isic_resnet_l_3c.pkl'
-    global_model_path = 'F:/MyDearest/Project/Skin_Lesion_Detection/isic_resnet_g.pkl'
+    local_model_path = 'F:\MyDearest\Project\SkinLesionSelfDetectionApp\models\isic_resnet_l_3c.pkl'
+    global_model_path = 'F:\MyDearest\Project\SkinLesionSelfDetectionApp\models\isic_resnet_g.pkl'
     predictor = Predictor(global_model_path ,local_model_path)
     predictor.load_data(work_dir="../project_data/TEST")
     predictor.predict()

@@ -1,5 +1,6 @@
 import json
 import socket
+import logging
 
 class Status:
     def __init__(self):
@@ -9,8 +10,28 @@ class Status:
         self.STAT_TIMEOUT = -2
         self.STAT_FAILURE = -1
         self.STAT_NOERROR = 0
-
 stat = Status()
+
+class Logger():
+    def __init__(self, filelog_name, log_level, name, fmt):
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(log_level)
+
+        fh = logging.FileHandler(fl_name)
+        fh.setLevel(log_level)
+
+        ch = logging.StreamHandler()
+        ch.setLevel(log_level)
+
+        formatter = logging.Formatter(fmt)
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+
+        self.logger.addHandler(fh)
+        self.logger.addHandler(ch)
+        pass
+    def getLogger(self):
+        return self.logger
 
 HEAD_LENGTH = 4
 
