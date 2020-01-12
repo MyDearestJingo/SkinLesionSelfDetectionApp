@@ -9,6 +9,7 @@ from InputData import InputData
 from Predictor import Predictor
 from TaskManager import TaskManager
 import tools
+import shutil
 
 aliyun = "120.26.147.239"
 virtual = "192.168.109.131"
@@ -28,15 +29,18 @@ if __name__ == "__main__":
             print("Requesting Task from Transmitor ...")
             stat_tm = tm.recv_task()
             if stat_tm == tm.stat.STAT_WAIT:
-                time.sleep(5)
+                time.sleep(2)
                 continue
             task_dir =  tm.get_task()
             print("Task Dir: {}".format(task_dir))
             predictor.load_data(work_dir=task_dir)
             result = predictor.predict()
+            print(result)
             predictor.output_result()
             tm.send_result(result)
-            break
+            ##### Only for test ######
+            # shutil.rmtree("F:/MyDearest/Project/SkinLesionSelfDetectionApp/dev/test/TEST")
+            ##########################
     finally:
         tm.close()
     

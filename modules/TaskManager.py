@@ -42,8 +42,6 @@ class TaskManager:
 
     ''' def 从socket接收任务数据并写入磁盘 '''
     def recv_task(self, max_seg_recv=0):
-        is_success = False
-        n_timeout = 0
         recv_stat, task_pack = tools.recv_data(self.t_socket)
         task_pack = json.loads(task_pack)
 
@@ -69,7 +67,7 @@ class TaskManager:
         print(file_list)
         with open(task_dir+"/"+"csv.csv","w",newline="") as csv_file:
             writer = csv.writer(csv_file)
-            writer.writerows(file_list,)
+            writer.writerows(file_list)
         self.task_list.append(task_pack["id"])
         
         return self.stat.STAT_NOERROR
@@ -87,11 +85,12 @@ class TaskManager:
     ''' def 接收预测结果并从socket回传 '''
     def send_result(self, result):
         # self.connect()
-        feedback = {"msg": result}
+        client_id = self.task_list.pop(0)
+        feedback = {"id": client_id,"msg": result}
         bstream = json.dumps(feedback).encode('utf-8')
         send_stat,_ = tools.send_data(self.t_socket, bstream)
         if send_stat != self.stat.STAT_NOERROR:
-            print("Reuslt of {} send failed".format(self.task_list[0]))
+            print("Reuslt of {} send failed".format(client_id))
         # self.task_list.pop[0]
         pass
 
