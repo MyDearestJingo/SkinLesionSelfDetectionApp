@@ -2,6 +2,8 @@
 中转服务器
 12.30.2019: 字节流图片发送至RTX测试
 '''
+import sys
+sys.path.append("..")
 
 import socket
 import base64
