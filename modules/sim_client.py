@@ -5,8 +5,7 @@ import csv
 import base64
 import json
 
-img_filenames = ["ISIC_0012086.jpg", "ISIC_0012092.jpg", "ISIC_0012095.jpg"]
-work_dir = "F:/MyDearest/Project/SkinLesionSelfDetectionApp/dev/sim_client"
+work_dir = "C:/Users/MyDearest Surface/Documents/Project/SkinLesionSelfDetectionApp/dev/sim_client"
 def send_req(client_id, work_dir, out_socket, data_stream=None):
         req_pack = {"id": client_id,
                     "n_imgs": 0,
@@ -48,9 +47,11 @@ def recv_result(in_socket):
 
 
 virtual = "192.168.109.131"
+aliyun = "120.26.147.239"
+localhost = "127.0.0.1"
 port =  9998
 transmit_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-transmit_socket.connect((virtual, port))
+transmit_socket.connect((localhost, port))
 
 client_id = "TEST_"+str(int(time.time()))
 send_req(client_id, work_dir, out_socket=transmit_socket)

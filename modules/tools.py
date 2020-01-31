@@ -33,7 +33,7 @@ class Logger():
     def getLogger(self):
         return self.logger
 
-HEAD_LENGTH = 4
+HEAD_LENGTH = 4 # the length of header
 
 def get_checksum(bstream):
     cs = 0 # checksum

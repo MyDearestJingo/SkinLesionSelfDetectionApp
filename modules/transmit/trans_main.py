@@ -14,7 +14,8 @@ virtual = "192.168.109.131"
 vps_jp = "198.13.44.143"
 localhost = "127.0.0.1"
 
-workdir = os.getcwd()+'/'+"test"
+workdir = "C:/Users/MyDearest Surface/Documents/Project/SkinLesionSelfDetectionApp/dev/test"
+# workdir = os.getcwd()+'/'+"test"
 trans = Transferer(localhost,9999,9998, workdir)
 
 pred_dev = PredictorCom(trans)

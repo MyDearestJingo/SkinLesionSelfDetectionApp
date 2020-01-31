@@ -19,9 +19,6 @@ aliyun_inside = "172.16.71.30"
 virtual = "192.168.109.131"
 vps_jp = "198.13.44.143"
 
-host = aliyun_inside
-port = 9999
-
 img_filenames = ["ISIC_0012086.jpg", "ISIC_0012092.jpg", "ISIC_0012095.jpg"]
 # img_filenames = ["pixiv57735171_12.jpg", "pixiv57735171_11.jpg", "pixiv57735171_6.jpg"]
 
@@ -187,26 +184,39 @@ class ClientCom(threading.Thread):
                 self.transferer.req_lock.release()
                 is_complete = False
                 while not is_complete:
-                    self.transferer.result_lock.acquire()
-                    if len(self.transferer.result_list)==0:
-                        self.transferer.result_lock.release()
-                        time.sleep(2)
-                        continue
+                    if self.transferer.pred_socket is not None:
+                        self.transferer.result_lock.acquire()
+                        if len(self.transferer.result_list)==0:
+                            self.transferer.result_lock.release()
+                            time.sleep(2)
+                            continue
+                        else:
+                                for idx in range(len(self.transferer.result_list)):
+                                    if self.transferer.result_list[idx]["id"] == client_id:
+                                        result = self.transferer.result_list.pop(idx)
+                                        self.transferer.result_lock.release()
                     else:
-                        for idx in range(len(self.transferer.result_list)):
-                            if self.transferer.result_list[idx]["id"] == client_id:
-                                result = self.transferer.result_list.pop(idx)
-                                # print(result)
-                                self.transferer.send_result(result)
-                                self.transferer.disconnect_client_dev()
-                                is_complete = True
-                        self.transferer.result_lock.release()
-                        time.sleep(2)
+                        self.transferer.req_lock.acquire()
+                        self.transferer.req_list.pop(0)
+                        self.transferer.req_lock.release()
+                        req_pack = json.loads(req["data"].decode('utf-8'))
+                        # req_pack = req
+                        result = []
+                        for filename in req_pack["name_imgs"]:
+                            result.append([filename, -2])
+                        result = {"id": client_id, "result": result}
+                    self.transferer.send_result(result)
+                    self.transferer.disconnect_client_dev()
+                    is_complete = True
+        except Exception as E:
+            raise E
         finally:
             pass
 
 if __name__ == "__main__":
-    trans = Transferer(aliyun_inside,9999,9998,os.getcwd()+'/'+"test")
+    # workdir = os.getcwd()+'/'+"test"
+    workdir = "C:/Users/MyDearest Surface/Documents/Project/SkinLesionSelfDetectionApp/dev/test"
+    trans = Transferer(aliyun_inside,9999,9998,)
     try:
         while True:
             trans.connet_pred_dev()
