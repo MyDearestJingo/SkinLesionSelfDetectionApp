@@ -13,6 +13,7 @@ import tools
 import os
 import csv
 import threading
+import shutil
 
 aliyun = "120.26.147.239"
 aliyun_inside = "172.16.71.30"
@@ -58,7 +59,8 @@ class Transferer():
 
     def recv_req(self): # 从客户端接收任务请求
         n_timeout = 0
-        recv_stat, req_data = tools.recv_data(self.client_socket)
+        recv_stat, req_data = tools.recv_data(self.client_socket,check_method=None)
+        print("\nRecv Completed")
         req_pack = json.loads(req_data.decode('utf-8'))
 
         # 创建任务目录
@@ -134,9 +136,12 @@ class Transferer():
         bstream = json.dumps(result).encode('utf-8')
         print("Sending result of client: {} | size: {}B".format(result["id"], len(bstream)))
         try:
-            tools.send_data(self.client_socket, bstream)
+            tools.send_data(self.client_socket, bstream, check_method=None, feedback=False)
         finally:
             pass
+
+    def clean_cache(self, id):
+        shutil.rmtree(self.work_dir+'/'+id)
 
 class PredictorCom(threading.Thread):
     def __init__(self, transferer):
@@ -207,6 +212,7 @@ class ClientCom(threading.Thread):
                         result = {"id": client_id, "result": result}
                     self.transferer.send_result(result)
                     self.transferer.disconnect_client_dev()
+                    self.transferer.clean_cache(client_id)
                     is_complete = True
         except Exception as E:
             raise E
