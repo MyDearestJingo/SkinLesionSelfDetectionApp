@@ -46,10 +46,13 @@ def send_data(send_socket, pack, max_seg_size=0, timeout=10, max_retry=5, check_
     stat_flag = stat.STAT_NOERROR
     pre_timeout = send_socket.gettimeout()
     send_socket.settimeout(timeout)
+    pack_size = len(pack)
     if check_method is not None:
         cs = check_method(pack).to_bytes(1,"little")
-    pack_size = len(pack)
-    bstream = (pack_size+len(cs)).to_bytes(HEAD_LENGTH,"little") + pack + cs
+        pack_size += len(cs)
+    bstream = pack_size.to_bytes(HEAD_LENGTH,"little") + pack
+    if check_method is not None:
+        bstream += cs
     size_to_send = len(bstream)
     
     sent_size = 0
@@ -138,23 +141,29 @@ def recv_data(recv_socket, size_to_recv=None, max_seg_size=0, timeout=10, max_re
                 stat_flag = stat.STAT_FAILURE
                 raise e
                 break
-        if stat_flag == stat.STAT_NOERROR and check_method is not None:
-            print('\nChecking...',end='\r')
-            cs = get_checksum(recv_buff[:-1])
-            recv_cs = recv_buff[-1]
-            if feedback:
-                send_stat,_ = send_data(recv_socket,cs.to_bytes(1,"little"),feedback=False)
-            if cs == recv_cs:
-                print("Checking Success. Transfer Complete")
-                is_successful = True
-                break
+        if stat_flag == stat.STAT_NOERROR:
+            if check_method is not None:
+                print('\nChecking...',end='\r')
+                cs = get_checksum(recv_buff[:-1])
+                recv_cs = recv_buff[-1]
+                if feedback:
+                    send_stat,_ = send_data(recv_socket,cs.to_bytes(1,"little"),feedback=False)
+                if cs == recv_cs:
+                    print("Checking Success. Transfer Complete")
+                    is_successful = True
+                    break
+                else:
+                    print("Data Error, need to retransfer")
+                    n_check += 1
+                    if n_check >= max_retry:
+                        stat_flag = stat.STAT_CHECKFAILED
             else:
-                print("Data Error, need to retransfer")
-                n_check += 1
-                if n_check >= max_retry:
-                    stat_flag = stat.STAT_CHECKFAILED
+                is_successful = True
 
     recv_socket.settimeout(per_timeout)
-    return (stat_flag, recv_buff[:-1])
+    if check_method is not None:
+        return (stat_flag, recv_buff[:-1])
+    else:
+        return (stat_flag, recv_buff)
                 
     
